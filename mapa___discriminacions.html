@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Discriminacions per antigitanisme i antigitanisme de gènere</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #b9f1d4;
+            color: #000;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        h1 {
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #000000;
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .form-title {
+            margin-top: 0;
+            color: #000000;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #000000;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .radio-option input {
+            width: auto;
+        }
+        
+        button {
+            background: #e74c3c;
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #c0393c;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #map {
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .legend-color.racial {
+            background-color: #e74c3c;
+        }
+        
+        .legend-color.gender {
+            background-color: #3498db;
+        }
+        
+        .instructions {
+            background: #f4acaa;
+            border: 1px solid #ed9d9a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            #map {
+                height: 400px;
+            }
+            
+            .form-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mapa de Discriminacions per Antigitanisme i Antigitanisme de Gènere</h1>
+            <p class="description">Comparteix les teves experiències de discriminació per ajudar a visibilitzar aquest problema a la nostra comunitat. Totes les dades són anònimes.</p>
+        </header>
+        
+        <div class="instructions">
+            <h3>📋 Com funciona:</h3>
+            <ol>
+                <li>Fes clic al mapa per seleccionar la ubicació</li>
+                <li>Omple el formulari amb la teva experiència</li>
+                <li>Clica "Guardar Punt" per afegir-lo al mapa</li>
+            </ol>
+        </div>
+        
+        <div class="form-container">
+            <h3 class="form-title">Reporta una experiència de discriminació</h3>
+            
+            <div class="form-group">
+                <label for="type">Tipus de discriminació *</label>
+                <select id="type" required>
+                    <option value="">Selecciona una opció</option>
+                    <option value="racial">Antigitanisme</option>
+                    <option value="gender">Antigitanisme de Gènere</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="age">Edat (opcional)</label>
+                <input type="number" id="age" min="1" max="120" placeholder="Ex: 25">
+            </div>
+            
+            <div class="form-group">
+                <label>Has denunciat el fet? *</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="denounced-yes" name="denounced" value="si" required>
+                        <label for="denounced-yes">Sí</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="denounced-no" name="denounced" value="no">
+                        <label for="denounced-no">No</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="denounced-thinking" name="denounced" value="pensant-ho">
+                        <label for="denounced-thinking">Estic pensant-ho</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Descripció de l'incident *</label>
+                <textarea id="description" rows="4" placeholder="Explica breument què va passar..." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Data aproximada (opcional)</label>
+                <input type="date" id="date">
+            </div>
+            
+            <button onclick="saveMarker()">📍 Guardar Punt al Mapa</button>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color racial"></div>
+                <span>Antigitanisme</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color gender"></div>
+                <span>Antigitanisme de Gènere</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <script>
+        // Inicialitza el mapa centrat a Catalunya
+        const map = L.map('map').setView([41.5912, 1.5209], 10);
+        
+        // Afegeix capa del mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Configuració de Firebase (REMPLASA amb les teves dades)
+        const firebaseConfig = {
+            // Replace with your actual Firebase config here
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Inicialitza Firebase (comenta si no tens configuració)
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase inicialitzat correctament");
+        } catch (error) {
+            console.log("Firebase no configurat. Les dades es guardaran localment.");
+            db = null;
+        }
+        
+        // Variable per al marcador temporal
+        let tempMarker = null;
+        let selectedLatLng = null;
+        
+        // Colors per als tipus de discriminació
+        const typeColors = {
+            'racial': '#e74c3c', // Vermell
+            'gender': '#3498db'  // Blau
+        };
+        
+        // Emmagatzema localment si no hi ha Firebase
+        let localMarkers = JSON.parse(localStorage.getItem('discrimination_markers')) || [];
+        
+        // Carrega marcadors existents
+        function loadMarkers() {
+            // Si hi ha Firebase, carrega des d'allà
+            if (db) {
+                db.collection("discrimination_markers").onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            addMarkerToMap(change.doc.data());
+                        }
+                    });
+                });
+            } else {
+                // Carrega des de l'emmagatzematge local
+                localMarkers.forEach(marker => {
+                    addMarkerToMap(marker);
+                });
+            }
+        }
+        
+        // Afegeix un marcador al mapa
+        function addMarkerToMap(data) {
+            // Crea un icon personalitzat amb el color corresponent
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${typeColors[data.type]}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                iconSize: [24, 24]
+            });
+            
+            // Contingut del popup
+            const popupContent = `
+                <div style="min-width: 200px;">
+                    <h4 style="margin-top: 0; color: ${typeColors[data.type]};">${data.type === 'racial' ? 'Discriminació Racial/Ètnic' : 'Discriminació de Gènere'}</h4>
+                    <p><strong>Descripció:</strong> ${data.description}</p>
+                    ${data.age ? `<p><strong>Edat:</strong> ${data.age} anys</p>` : ''}
+                    <p><strong>Denunciat:</strong> ${data.denounced === 'si' ? 'Sí' : data.denounced === 'pensant-ho' ? 'Pensant-ho' : 'No'}</p>
+                    ${data.date ? `<p><strong>Data:</strong> ${new Date(data.date).toLocaleDateString('ca-ES')}</p>` : ''}
+                </div>
+            `;
+            
+            // Afegeix el marcador al mapa
+            L.marker([data.lat, data.lng], { icon: icon })
+                .addTo(map)
+                .bindPopup(popupContent);
+        }
+        
+        // Al fer clic al mapa
+        map.on('click', function(e) {
+            // Elimina marcador previ si n'hi ha
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+            }
+            
+            // Guarda la ubicació seleccionada
+            selectedLatLng = e.latlng;
+            
+            // Crea un marcador temporal
+            const icon = L.divIcon({
+                className: 'temp-marker',
+                html: '<div style="background-color: #2ecc71; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.7);"></div>',
+                iconSize: [30, 30]
+            });
+            
+            tempMarker = L.marker(selectedLatLng, { icon: icon })
+                .addTo(map)
+                .bindPopup("Ubicació seleccionada")
+                .openPopup();
+        });
+        
+        // Guarda marcador
+        function saveMarker() {
+            // Valida que s'hagi seleccionat una ubicació
+            if (!selectedLatLng) {
+                alert("Si us plau, primer fes clic al mapa per seleccionar la ubicació on va passar l'incident.");
+                return;
+            }
+            
+            // Obtenir valors del formulari
+            const type = document.getElementById('type').value;
+            const description = document.getElementById('description').value;
+            const age = document.getElementById('age').value;
+            const denounced = document.querySelector('input[name="denounced"]:checked');
+            const date = document.getElementById('date').value;
+            
+            // Validacions
+            if (!type) {
+                alert("Si us plau, selecciona el tipus de discriminació.");
+                return;
+            }
+            
+            if (!description.trim()) {
+                alert("Si us plau, afegeix una descripció de l'incident.");
+                return;
+            }
+            
+            if (!denounced) {
+                alert("Si us plau, indica si has denunciat el fet o no.");
+                return;
+            }
+            
+            // Crea l'objecte amb les dades
+            const markerData = {
+                lat: selectedLatLng.lat,
+                lng: selectedLatLng.lng,
+                type: type,
+                description: description.trim(),
+                age: age || null,
+                denounced: denounced.value,
+                date: date || null,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Guarda les dades
+            if (db) {
+                // Guarda a Firebase
+                db.collection("discrimination_markers").add(markerData)
+                    .then(() => {
+                        showSuccess();
+                    })
+                    .catch(error => {
+                        console.error("Error guardant a Firebase:", error);
+                        alert("Hi ha hagut un error guardant les dades. Torna-ho a intentar.");
+                    });
+            } else {
+                // Guarda localment
+                localMarkers.push(markerData);
+                localStorage.setItem('discrimination_markers', JSON.stringify(localMarkers));
+                addMarkerToMap(markerData);
+                showSuccess();
+            }
+        }
+        
+        // Mostra missatge d'èxit i reseteja el formulari
+        function showSuccess() {
+            alert("✅ Punt guardat correctament. Gràcies per compartir la teva experiència.");
+            
+            // Reseteja el formulari
+            document.getElementById('type').value = "";
+            document.getElementById('description').value = "";
+            document.getElementById('age').value = "";
+            document.getElementById('date').value = "";
+            
+            // Desmarcar radio buttons
+            const radioButtons = document.querySelectorAll('input[name="denounced"]');
+            radioButtons.forEach(radio => radio.checked = false);
+            
+            // Elimina el marcador temporal
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+                tempMarker = null;
+            }
+            
+            selectedLatLng = null;
+        }
+        
+        // Carrega els marcadors quan la pàgina estigui llesta
+        window.onload = function() {
+            loadMarkers();
+            
+            // Configura la data actual com a valor per defecte
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        };
+    </script>
+</body>
+</html>
